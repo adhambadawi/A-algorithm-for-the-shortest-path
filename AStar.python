@@ -1,0 +1,74 @@
+import heapq
+
+class Node:
+    def __init__(self, row, col, cost=0, heuristic=0):
+        self.row = row
+        self.col = col
+        self.cost = cost
+        self.heuristic = heuristic
+        self.total_cost = cost + heuristic
+        self.parent = None
+
+    def __lt__(self, other):
+        return self.total_cost < other.total_cost
+
+def calculate_heuristic(node, goal):
+    # Manhattan distance heuristic
+    return abs(node.row - goal.row) + abs(node.col - goal.col)
+
+def a_star(grid, start, goal):
+    rows, cols = len(grid), len(grid[0])
+    visited = [[False] * cols for _ in range(rows)]
+
+    start_node = Node(start[0], start[1])
+    goal_node = Node(goal[0], goal[1])
+
+    open_set = [start_node]
+    heapq.heapify(open_set)
+
+    while open_set:
+        current_node = heapq.heappop(open_set)
+
+        if current_node.row == goal_node.row and current_node.col == goal_node.col:
+            # Goal reached, reconstruct the path
+            path = []
+            while current_node:
+                path.append((current_node.row, current_node.col))
+                current_node = current_node.parent
+            return path[::-1]
+
+        visited[current_node.row][current_node.col] = True
+
+        neighbors = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # Four possible moves (right, down, left, up)
+        for dr, dc in neighbors:
+            new_row, new_col = current_node.row + dr, current_node.col + dc
+
+            if 0 <= new_row < rows and 0 <= new_col < cols and not visited[new_row][new_col] and grid[new_row][new_col] != 1:
+                new_node = Node(new_row, new_col, current_node.cost + 1, calculate_heuristic((new_row, new_col), goal))
+                new_node.parent = current_node
+                heapq.heappush(open_set, new_node)
+
+    # If no path is found
+    return None
+
+def main():
+    # Example usage:
+    grid = [
+        [0, 0, 0, 0, 0],
+        [0, 1, 1, 0, 0],
+        [0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+    ]
+
+    start_point = (0, 0)
+    goal_point = (3, 4)
+
+    result = a_star(grid, start_point, goal_point)
+
+    if result:
+        print("Shortest path:", result)
+    else:
+        print("No path found.")
+
+if __name__ == "__main__":
+    main()
